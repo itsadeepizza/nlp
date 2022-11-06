@@ -1,10 +1,11 @@
 import os.path
 import pickle
+import spacy
+from torch.utils.data import IterableDataset, DataLoader
+import torch
+import numpy as np
 
-
-
-
-def index_text_file(file, batch_size=1000):
+def index_text_file(file, batch_size=10000):
     """Read in the file once and build a list of batches"""
     batch_indexes = [0]
     offset = 0
@@ -40,7 +41,7 @@ def open_index(filepath):
 class TextBatchIterator:
     """Class for iterating in small chunks of bigtext files"""
     def __init__(self, filepath, pos_list):
-        import spacy
+
 
         self.nlp = spacy.load("it_core_news_sm")
         self.filepath = filepath
@@ -123,14 +124,16 @@ class TextBatchIterator:
 
 class NGramTextIterator:
     """Iterate NGrams among the batches of the big text"""
-    def __init__(self, text_batch_iterator):
+    def __init__(self, text_batch_iterator, device=torch.device('cpu')):
         self.text_batch_iterator = text_batch_iterator
+        self.device = device
 
 
     def __iter__(self):
         self.nbatch = 0
         next_batch = self.text_batch_iterator[self.nbatch]
-        self.ngram_iterator = NGramBatchIterator(next_batch, self.text_batch_iterator).__iter__()
+        self.ngram_iterator = NGramBatchIterator(next_batch, self.text_batch_iterator,
+                                                 device=self.device).__iter__()
         return self
 
     def __next__(self):
@@ -151,13 +154,30 @@ class NGramTextIterator:
 
 class NGramBatchIterator:
     """Class for iterating among Ngram in a short text"""
-    def __init__(self, text, text_batch_iterator, max_dist=2):
+    def __init__(self, text, text_batch_iterator, max_dist=2, device=torch.device('cpu')):
         self.text_batch_iterator = text_batch_iterator
         self.nlp = text_batch_iterator.nlp
+        # TODO: add below to preprocessing
+        # Below can be done in preprocessing, it takes 80% of the time !
         self.sentences = [i for i in self.nlp(text).sents]
 
         self.vocab = text_batch_iterator.vocab
+        self.word_frequency = text_batch_iterator.word_frequency
+        self.len_vocab = len(self.vocab)
         self.window = [x for x in range(-max_dist, max_dist + 1) if x != 0]
+        self.device = device
+
+
+    def skip_too_frequent(self, word):
+        """Skip words with too many occurrency"""
+        base = 1.2 # hyperparameter
+        freq = self.word_frequency[word]
+        if freq > 1e-3:
+            ratio = 1e-3 / freq * base**(np.log(freq)+8)
+            r = np.random.random()
+            if r > ratio:
+                return True
+        return False
 
 
     def __iter__(self):
@@ -165,6 +185,13 @@ class NGramBatchIterator:
         self.curr_word = 0
         self.curr_context = 0
         return self
+
+    def tensorize(self, word):
+        """Convert a word to a tensor"""
+        dummy = torch.zeros(self.len_vocab, device=self.device)
+        word_index = self.vocab[word]
+        dummy[word_index] = 1
+        return dummy
 
 
     def __next__(self):
@@ -183,7 +210,11 @@ class NGramBatchIterator:
             return self.__next__()
 
         if word not in self.vocab:
-            #TODO: optimize with a sorted vocabulary
+            self.curr_word += 1
+            return self.__next__()
+
+        if self.skip_too_frequent(word):
+            # Skip a word with increasing probability if very frequent
             self.curr_word += 1
             return self.__next__()
 
@@ -205,25 +236,61 @@ class NGramBatchIterator:
 
         context = str(sentence[context_pos])
         if context not in self.vocab:
-            #TODO: optimize with a sorted vocabulary
             self.curr_context += 1
             return self.__next__()
 
         self.curr_context += 1
+        if self.skip_too_frequent(context):
+            return self.__next__()
 
-        return word, context
+        label = torch.tensor([1], device=self.device)
+        # TODO: Add negative labels
 
+        return torch.stack([self.tensorize(word), self.tensorize(context)]), label
+
+
+class LongTextDataset(IterableDataset):
+    def __init__(self, text_batch_iterator, **kwargs):
+        self.iterator = NGramTextIterator(text_batch_iterator, **kwargs)
+
+    def __iter__(self):
+        return self.iterator.__iter__()
+
+
+
+file = 'dataset/wiki_it_processed.txt'
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+# TODO: Fix cuda
+train, test = TextBatchIterator.split(file, seed=4, ratios=[8, 2])
+train_dataset = LongTextDataset(train, device=device)
+test_dataset = LongTextDataset(test, device=device)
+train_dataloader = DataLoader(train_dataset, batch_size=200)
 
 if __name__ == "__main__":
 
-    file = 'dataset/wiki_it_processed.txt'
-    train, test = TextBatchIterator.split(file, seed=4, ratios=[8, 2])
-    vocab = train.vocab
-    print(vocab)
-    print(train.word_frequency)
 
-    batch = train[0]
-    it = NGramTextIterator(train)
+    wc = train.word_frequency
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    fig, ax = plt.subplots(1, 1)
+
+    sns.ecdfplot(wc.values(), ax=ax)
+    ax.set_xscale('log')
+    fig.show()
+
+    # 25 ms for batch with 200 of batch size (without skip)
+    # 80 ms for batch with 200 of batch size (with skip)
+    # 50 ms for the old model
+    #
+    import time
+    tic = time.time()
+    n = 100
+    for i, word in zip(range(n), train_dataloader):
+        pass
+    tac = time.time()
+    print(f"{1000*(tac - tic) / n:.0f} ms")
+
 
 
 
