@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
-from loader import train, train_dataloader
+from loader import train, train_dataloader, train_dataset
 from model import Model
 
+tensorize = train.tensorize
 
 dataloader = train_dataloader
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 # TODO: fix below
-vocab = {word: torch.zeros(1500) for word, n in train.vocab.items()}
+vocab = {word: tensorize(word) for word, n in train.vocab.items()}
 use_tensorboard = True
 use_existing_model = True
 save_freq = 10000
@@ -40,9 +41,9 @@ if use_tensorboard:
             
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
-            (v1,v2,v3) = (embedding(vocab[word1]).tolist(), \
-                       embedding(vocab[word2]).tolist(), \
-                       embedding(vocab[word3]).tolist())
+            (v1,v2,v3) = (embedding(tensorize(word1)).tolist(), \
+                       embedding(tensorize(word2)).tolist(), \
+                       embedding(tensorize(word3)).tolist())
             #only 3 dim of embedding
             v1 = [v1[0],v1[1],v1[2]]
             v2 = [v2[0],v2[1],v2[2]]
@@ -73,8 +74,8 @@ if use_tensorboard:
 
 with torch.no_grad():
     print("before training")
-    emb_is = model.embedding(vocab["è"])
-    emb_was = model.embedding(vocab["era"])
+    emb_is = model.embedding(tensorize("è"))
+    emb_was = model.embedding(tensorize("era"))
     print(emb_is)
     print(emb_was)
     print(torch.dot(emb_is,emb_was))
@@ -116,8 +117,8 @@ if use_tensorboard:
 
 with torch.no_grad():
     print("after training")
-    emb_is = model.embedding(vocab["is"])
-    emb_was = model.embedding(vocab["was"])
+    emb_is = model.embedding(tensorize("is"))
+    emb_was = model.embedding(tensorize("was"))
     print(emb_is)
     print(emb_was)
     print(torch.dot(emb_is,emb_was))
