@@ -38,9 +38,10 @@ class Model(nn.Module):
         # res_matrix = self.sigmoid(torch.matmul(v1,torch.transpose(v2,0,1)))
 
         prods = torch.bmm(v1.unsqueeze(1), v2.unsqueeze(2))
-        norm_v1 = torch.bmm(v1.unsqueeze(1), v1.unsqueeze(2))
-        norm_v2 = torch.bmm(v2.unsqueeze(1), v2.unsqueeze(2))
-        prod_normalised = prods/torch.sqrt(norm_v1*norm_v2)
+        # norm_v1 = torch.bmm(v1.unsqueeze(1), v1.unsqueeze(2))
+        # norm_v2 = torch.bmm(v2.unsqueeze(1), v2.unsqueeze(2))
+        # prod_normalised = prods/torch.sqrt(norm_v1*norm_v2)
+        prod_normalised = prods
         return torch.abs(prod_normalised).squeeze(dim=2)
 
         # return torch.diagonal(res_matrix,0).view(-1,1)

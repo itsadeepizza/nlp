@@ -10,7 +10,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 # TODO: fix below
 vocab = {word: tensorize(word) for word, n in train.vocab.items()}
 use_tensorboard = True
-use_existing_model = True
+use_existing_model = False
 save_freq = 10000
 model_file = "model.pth"
 model = Model(device=device, len_voc=len(vocab))
@@ -21,7 +21,7 @@ if use_existing_model:
     except FileNotFoundError:
         print(f"can't find {model_file}, creating a new model to train")
 
-opt = torch.optim.SGD(model.parameters(), lr=1e-4)
+opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 criterion = torch.nn.L1Loss()
 
 if use_tensorboard:
@@ -85,23 +85,28 @@ tot_iters = 0
 for epoch in range(50):
     print("epoch started: ",epoch)
     data = iter(dataloader)
+    mean_train_loss = 0
     for i, (words, label) in enumerate(data):
         out = model(words)
         loss = criterion(out, label.to(device))
+        mean_train_loss += loss.item()
         if i==100:
             tic = time.time()
         if i==1100:
             toc = time.time()
             print("time in ms for batch:", (toc-tic))
-        if i % 1000 == 0:
-            print(f"epoch {epoch} iteration {i} loss:",loss.item())
+        n = 1000
+        if i % n == .0 and i > n:
+            print(list(model.parameters()))
+            print(f"epoch {epoch} iteration {i} loss:",mean_train_loss/n)
             if use_tensorboard:
                 index = epoch*tot_iters + i
                 plot_buf = gen_plot(model.embedding,"è", "era", "aeroporto",index)
                 image = PIL.Image.open(plot_buf)
                 image = ToTensor()(image).unsqueeze(0)[0]
                 writer.add_image('plot embedding', image, index)
-                writer.add_scalar('train_loss', loss.item(), index)
+                writer.add_scalar('train_loss', mean_train_loss/n, index)
+                mean_train_loss = 0
         if i % save_freq == 0:
             torch.save(model.state_dict(),model_file)
             print("model saved to file")

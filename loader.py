@@ -12,7 +12,7 @@ import numpy as np
 
 MAX_DIST = 2 # Max distance between word and context
 NEGATIVE_SAMPLE_PROB = 0.87   # Probability of a negative sample
-MAX_LEN = 1500 # Number of words in vocabulary
+MAX_LEN = 15_000 # Number of words in vocabulary
 BATCH_SIZE = 200
 
 # Skipping words  double the execution time
@@ -87,7 +87,7 @@ class TextBatchIterator:
         batch = batch.replace('\n', ' ')
         batch = batch.replace('  ', ' ')
         batch = batch.strip()
-        batch = NGramBatchIterator(batch, self, max_dist=MAX_DIST)
+
         return batch
 
     def __getitem__(self, item: int) -> "NGramBatchIterator":
@@ -181,10 +181,11 @@ class NGramBatchIterator:
     def __init__(self, text, text_batch_iterator, max_dist=MAX_DIST):
         self.text_batch_iterator = text_batch_iterator
         self.nlp = text_batch_iterator.nlp
-        # TODO: add below to preprocessing
-        # Below can be done in preprocessing, it takes 80% of the time !
         self.text = text
-        self.sentences = [i for i in self.nlp(text).sents]
+        # TODO: add below to preprocessing
+        # Below can be done in preprocessing maybe, it takes 8 ms for batch
+        self.sentences = [[str(token) for token in sentence] for sentence in self.nlp(text).sents]
+        # self.sentences = [text.split()]
 
         self.vocab = text_batch_iterator.vocab
         self.word_frequency = text_batch_iterator.word_frequency
@@ -272,6 +273,10 @@ class NGramBatchIterator:
             while np.random.random() < NEGATIVE_SAMPLE_PROB:
                 # negative sample
                 # keep the word and choose a random context
+                # TODO: optimize random choice for reducing time of 1-2 ms par batch
+                # TODO: chose world with probability depending on frequency. Maybe using old
+                #  context word from a rolling batch ?
+                # Choose a random word
                 word_index = np.random.randint(0, self.len_vocab)
                 # embedded_context = torch.zeros(1, device=self.device)
                 embedded_context = torch.zeros(self.len_vocab)
@@ -280,11 +285,12 @@ class NGramBatchIterator:
                 features = torch.stack([embedded_word, embedded_context])
                 yield features, label
 
-            #positiva sample
+            #positive sample
             label = torch.tensor([1])
             self.curr_context += 1
             # embedded_context = torch.zeros(1)
             embedded_context = self.tensorize(context)
+            # Performing so many stack decrease performance
             features = torch.stack([embedded_word, embedded_context])
             yield features, label
 
@@ -306,7 +312,8 @@ class NGramTextIterator:
 
     def __iter__(self):
         self.nbatch = 0
-        next_batch = self.text_batch_iterator[self.nbatch]
+        next_batch = NGramBatchIterator(self.text_batch_iterator[self.nbatch],
+                                                        self.text_batch_iterator, max_dist=MAX_DIST)
         self.ngram_iterator = next_batch.word_context_generator()
         return self
 
@@ -319,7 +326,8 @@ class NGramTextIterator:
             if self.nbatch >= len(self.text_batch_iterator):
                 raise StopIteration
             else:
-                next_batch = self.text_batch_iterator[self.nbatch]
+                next_batch = NGramBatchIterator(self.text_batch_iterator[self.nbatch],
+                                                        self.text_batch_iterator, max_dist=MAX_DIST)
                 self.ngram_iterator = next_batch.word_context_generator()
                 return self.__next__()
 
@@ -335,8 +343,8 @@ class LongTextDataset(IterableDataset):
         return self.iterator.__iter__()
 
 
-# TODO: Fix cuda
 train, test = TextBatchIterator.split(file, seed=4, ratios=[8, 2], device=device)
+vocab = train.vocab
 train_dataset = LongTextDataset(train)
 test_dataset = LongTextDataset(test)
 train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE)
@@ -344,7 +352,7 @@ train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE)
 if __name__ == "__main__":
 
 
-    wc = train.word_frequency
+
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -357,23 +365,25 @@ if __name__ == "__main__":
     # 25 ms for batch with 200 of batch size (without skip)
     # 80 ms for batch with 200 of batch size (with skip)
     # 34 ms for batch with 200 of batch size (with skip) and negative samples (0.8)
-    # 50 ms for the old model
-    #
+    # 50 ms for the old model on cpu
+    # AFTER OPTIMIZATION/DEBUGGING: 16 ms (1500 words)
+    # 28 ms (15 000 words)
     import time
 
+    def batch_time():
+        n = 1_000
+        for i, (features, label) in zip(range(n+101), train_dataloader):
+            if i==100:
+                tic = time.time()
+            if i == n+100:
+                tac = time.time()
+            features = features.to(device)
+            label = label.to(device)
+            pass
+            # print(word, label)
 
-    n = 300
-    for i, (features, label) in zip(range(n+101), train_dataloader):
-        if i==100:
-            tic = time.time()
-        if i == n+100:
-            tac = time.time()
-        features = features.to(device)
-        label = label.to(device)
-        pass
-        # print(word, label)
-
-    print(f"{1000*(tac - tic) / n:.0f} ms")
+        print(f"{1000*(tac - tic) / n:.0f} ms")
+    batch_time()
 
 
 
