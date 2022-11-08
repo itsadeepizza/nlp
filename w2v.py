@@ -122,3 +122,5 @@ with torch.no_grad():
     print(emb_is)
     print(emb_was)
     print(torch.dot(emb_is,emb_was))
+
+#type "tensorboard --logdir=runs" in terminal

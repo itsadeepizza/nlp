@@ -68,7 +68,8 @@ class TextBatchIterator:
         with open(index_path, 'rb') as f:
             return pickle.load(f)
 
-    def process_batch(self, batch):
+    def process_batch(self, batch: bytes) -> "NGramBatchIterator":
+        """Some minor modification to text, and create a NGramBatchIterator object"""
         batch = batch.decode(encoding='utf-8')
         batch = batch.replace('\r', '')
         batch = batch.replace('\n', ' ')
@@ -77,7 +78,8 @@ class TextBatchIterator:
         batch = NGramBatchIterator(batch, self, max_dist=MAX_DIST)
         return batch
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> "NGramBatchIterator":
+        """Return a NGramBatchIterator object"""
         start, end = self.pos_list[item]
         offset = end - start
         with open(self.filepath, 'rb') as f:
@@ -105,13 +107,13 @@ class TextBatchIterator:
         return [TextBatchIterator(filepath, pos_list_i, **kwargs) for pos_list_i in pos_list_splitted]
 
     def make_vocab(self, vocab_path, max_len=MAX_LEN):
-        """Make a vacabulary"""
+        """Make a vocabulary"""
         from collections import Counter
         from tqdm import tqdm
 
         word_count = Counter()
         for b in tqdm(self):
-            l = [str(token) for token in self.nlp.tokenizer(b)  if (not token.is_punct and not token.is_digit)]
+            l = [str(token) for token in self.nlp.tokenizer(b) if (not token.is_punct and not token.is_digit)]
             word_count.update(l)
         vocab = word_count.most_common(max_len)
         with open(vocab_path, 'wb') as f:
@@ -195,6 +197,7 @@ class NGramBatchIterator:
 
 
     def word_context_generator(self):
+        """A generator iterating a couple (word, context) label in the batch text"""
         self.curr_sentence = 0
         self.curr_word = 0
         self.curr_context = 0
@@ -239,7 +242,6 @@ class NGramBatchIterator:
                 self.curr_context += 1
                 continue
 
-
             if self.skip_too_frequent(context):
                 self.curr_context += 1
                 continue
@@ -260,8 +262,7 @@ class NGramBatchIterator:
 
                 label = torch.tensor([0], device=self.device)
 
-
-            yield torch.stack([embedded_word, embedded_context]) , label
+            yield torch.stack([embedded_word, embedded_context]), label
 
 
 
