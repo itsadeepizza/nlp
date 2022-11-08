@@ -88,11 +88,11 @@ for epoch in range(50):
     for i, (words, label) in enumerate(data):
         out = model(words)
         loss = criterion(out, label.to(device))
-        if i==10:
+        if i==100:
             tic = time.time()
-        if i==110:
+        if i==1100:
             toc = time.time()
-            print("time in ms:", (toc-tic)*10)
+            print("time in ms for batch:", (toc-tic))
         if i % 1000 == 0:
             print(f"epoch {epoch} iteration {i} loss:",loss.item())
             if use_tensorboard:
