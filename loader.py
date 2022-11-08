@@ -9,7 +9,7 @@ import numpy as np
 # HYPERPARAMETERS
 MAX_DIST = 2 # Max distance between word and context
 NEGATIVE_SAMPLE_PROB = 0.8   # Probability of a negative sample
-MAX_LEN = 1500 # Number of words
+MAX_LEN = 1500 # Number of words in vocabulary
 BATCH_SIZE = 200
 
 file = 'dataset/wiki_it_processed.txt'
@@ -74,6 +74,7 @@ class TextBatchIterator:
         batch = batch.replace('\n', ' ')
         batch = batch.replace('  ', ' ')
         batch = batch.strip()
+        batch = NGramBatchIterator(batch, self, max_dist=MAX_DIST)
         return batch
 
     def __getitem__(self, item):
@@ -164,6 +165,7 @@ class NGramBatchIterator:
         self.nlp = text_batch_iterator.nlp
         # TODO: add below to preprocessing
         # Below can be done in preprocessing, it takes 80% of the time !
+        self.text = text
         self.sentences = [i for i in self.nlp(text).sents]
 
         self.vocab = text_batch_iterator.vocab
@@ -185,11 +187,6 @@ class NGramBatchIterator:
         return False
 
 
-    def __iter__(self):
-        self.curr_sentence = 0
-        self.curr_word = 0
-        self.curr_context = 0
-        return self
 
 
     def tensorize(self, *args, **kwargs):
@@ -197,74 +194,76 @@ class NGramBatchIterator:
         return self.text_batch_iterator.tensorize(*args, **kwargs)
 
 
-    def __next__(self):
-        if self.curr_sentence < len(self.sentences):
+    def word_context_generator(self):
+        self.curr_sentence = 0
+        self.curr_word = 0
+        self.curr_context = 0
+        while self.curr_sentence < len(self.sentences):
             sentence = self.sentences[self.curr_sentence]
-        else:
-            raise StopIteration
+
+            if self.curr_word < len(sentence):
+                word = str(sentence[self.curr_word])
+            else:
+                self.curr_word = 0
+                self.curr_sentence += 1
+                self.curr_context = 0
+                continue
+
+            if word not in self.vocab:
+                self.curr_word += 1
+                continue
+
+            if self.skip_too_frequent(word):
+                # Skip a word with increasing probability if very frequent
+                self.curr_word += 1
+                continue
+
+            if self.curr_context < len(self.window):
+                context_pos = self.window[self.curr_context] + self.curr_word
+            else:
+                self.curr_word += 1
+                self.curr_context = 0
+                continue
+
+            if context_pos < 0:
+                self.curr_context += 1
+                continue
+
+            if context_pos >= len(sentence):
+                self.curr_word += 1
+                self.curr_context = 0
+                continue
+
+            context = str(sentence[context_pos])
+            if context not in self.vocab:
+                self.curr_context += 1
+                continue
 
 
-        if self.curr_word < len(sentence):
-            word = str(sentence[self.curr_word])
-        else:
-            self.curr_word = 0
-            self.curr_sentence += 1
-            self.curr_context = 0
-            return self.__next__()
+            if self.skip_too_frequent(context):
+                self.curr_context += 1
+                continue
 
-        if word not in self.vocab:
-            self.curr_word += 1
-            return self.__next__()
+            positive_sample = np.random.random() > NEGATIVE_SAMPLE_PROB
+            embedded_word = self.tensorize(word)
 
-        if self.skip_too_frequent(word):
-            # Skip a word with increasing probability if very frequent
-            self.curr_word += 1
-            return self.__next__()
+            if positive_sample:
+                label = torch.tensor([1], device=self.device)
+                self.curr_context += 1
+                embedded_context = self.tensorize(context)
+            else:
+                # negative label
+                # keep the word and choose a random context
+                embedded_context = torch.zeros(self.len_vocab, device=self.device)
+                word_index = np.random.randint(0, self.len_vocab)
+                embedded_context[word_index] = 1
 
-        if self.curr_context < len(self.window):
-            context_pos = self.window[self.curr_context] + self.curr_word
-        else:
-            self.curr_word += 1
-            self.curr_context = 0
-            return self.__next__()
-
-        if context_pos < 0:
-            self.curr_context += 1
-            return self.__next__()
-
-        if context_pos >= len(sentence):
-            self.curr_word += 1
-            self.curr_context = 0
-            return self.__next__()
-
-        context = str(sentence[context_pos])
-        if context not in self.vocab:
-            self.curr_context += 1
-            return self.__next__()
+                label = torch.tensor([0], device=self.device)
 
 
-        if self.skip_too_frequent(context):
-            self.curr_context += 1
-            return self.__next__()
-
-        positive_sample = np.random.random() > NEGATIVE_SAMPLE_PROB
-        embedded_word = self.tensorize(word)
-
-        if positive_sample:
-            label = torch.tensor([1], device=self.device)
-            self.curr_context += 1
-            embedded_context = self.tensorize(context)
-        else:
-            # negative label
-            # keep the word and choose a random context
-            embedded_context = torch.zeros(self.len_vocab, device=self.device)
-            word_index = np.random.randint(0, self.len_vocab)
-            embedded_context[word_index] = 1
-
-            label = torch.tensor([0], device=self.device)
+            yield torch.stack([embedded_word, embedded_context]) , label
 
 
-        return torch.stack([embedded_word, embedded_context]) , label
 
 
 class NGramTextIterator:
@@ -283,20 +282,20 @@ class NGramTextIterator:
     def __iter__(self):
         self.nbatch = 0
         next_batch = self.text_batch_iterator[self.nbatch]
-        self.ngram_iterator = NGramBatchIterator(next_batch, self.text_batch_iterator).__iter__()
+        self.ngram_iterator = next_batch.word_context_generator()
         return self
 
     def __next__(self):
+
         try:
-            next_ngram = self.ngram_iterator.__next__()
+            next_ngram = next(self.ngram_iterator)
         except StopIteration:
             self.nbatch += 1
             if self.nbatch >= len(self.text_batch_iterator):
                 raise StopIteration
             else:
                 next_batch = self.text_batch_iterator[self.nbatch]
-                self.ngram_iterator = NGramBatchIterator(next_batch,
-                                                         self.text_batch_iterator).__iter__()
+                self.ngram_iterator = next_batch.word_context_generator()
                 return self.__next__()
 
         return next_ngram
@@ -321,6 +320,9 @@ train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE)
 
 if __name__ == "__main__":
 
+    t = NGramTextIterator(train)
+    for x in t:
+        print(x)
 
     wc = train.word_frequency
     import matplotlib.pyplot as plt
@@ -338,6 +340,9 @@ if __name__ == "__main__":
     # 50 ms for the old model
     #
     import time
+
+
+
     tic = time.time()
     n = 600
     for i, (word, label) in zip(range(n), train_dataloader):
