@@ -21,10 +21,11 @@ OFFSET_SKIP = 0.025 # Decrease for skipping more words  (default is 0.00358)
 
 #======================================================
 
-file = 'dataset/wiki_it_processed.txt'
+file = 'dataset/wiki_it_ruby_processed.txt'
 device = torch.device("cpu")
 # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+#======================================================
 
 class TextBatchIterator:
     """
@@ -59,12 +60,13 @@ class TextBatchIterator:
             batch_indexes.append(offset)
         return batch_indexes
 
-    def generate_file_index(self):
+    @staticmethod
+    def generate_file_index(filepath):
         """Generate a index file for line numbers"""
 
-        with open(self.filepath, 'rb') as f:
-            file_index = self.index_text_file(f)
-        with open(self.filepath + ".index", 'wb') as f:
+        with open(filepath, 'rb') as f:
+            file_index = TextBatchIterator.index_text_file(f)
+        with open(filepath + ".index", 'wb') as f:
             pickle.dump(file_index, f)
 
     @staticmethod
@@ -76,7 +78,7 @@ class TextBatchIterator:
         if not os.path.exists(index_path):
             print(
                 "The index does not exists, creating one (the operation could take some time ...)")
-            TextBatchIterator.generate_file_index()
+            TextBatchIterator.generate_file_index(filepath)
         with open(index_path, 'rb') as f:
             return pickle.load(f)
 

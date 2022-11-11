@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 from loader import train, train_dataloader, train_dataset
-from model import Model
+from model import ModelOneMatrix as Model
 
 
 tensorize = train.tensorize
@@ -22,7 +22,8 @@ def embed2(word):
         t = tensorize(word)
         embedded = model.embedding(t).cpu()
         cont = model.context(t).cpu()
-        return torch.cat([embedded, cont])
+        r = torch.cat([embedded, cont])
+        return torch.abs(r)
 
 def find_best_by_dist(embedded_word):
     min_dist = None
@@ -68,5 +69,5 @@ show(["pittore", "scrittore", "regista", "meccanico", "motore", "auto"])
 show(["passato", "presente", "futuro"])
 show(["attore", "scrittore", "uomo", "donna", "scrittrice", "attrice"])
 plt.show() # show all figures and wait
-print("re - uomo + donna =", find_best_by_dist(embed("attore") - 2*embed("uomo") + 2*embed(
+print("re - uomo + donna =", find_best_by_dist(embed("re") - embed("uomo") + embed(
     "donna")))

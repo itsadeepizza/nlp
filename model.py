@@ -28,6 +28,7 @@ class Model(nn.Module):
         self.device = device
         self.context = Context(device, len_voc)
         self.embedding = Embedding(device, len_voc)
+
         self.sigmoid = nn.Sigmoid()
         self.to(self.device)
     def forward(self, x):
@@ -46,3 +47,31 @@ class Model(nn.Module):
 
         # return torch.diagonal(res_matrix,0).view(-1,1)
 
+class ModelOneMatrix(nn.Module):
+    def __init__(self, device=torch.device('cpu'), len_voc=None):
+        if not len_voc: raise ValueError("len_voc needed")
+        super().__init__()
+        self.device = device
+        # self.context = Context(device, len_voc)
+        self.embedding = Embedding(device, len_voc)
+        # A random learnable vector as e0 parameter
+        # self.register_parameter(name='prod', param=torch.nn.Parameter(torch.rand(len_voc, device=device)))
+        self.prod = torch.nn.Parameter(torch.rand(embedding_size))
+
+        self.sigmoid = nn.Sigmoid()
+        self.to(self.device)
+    def forward(self, x):
+        v1 = self.embedding(x.to(self.device).select(1, 0))
+        v2 = self.embedding(x.to(self.device).select(1, 1))
+
+        # Add learnable inner product
+        v1 = self.prod * v1
+        prods = torch.bmm(v1.unsqueeze(1), v2.unsqueeze(2))
+        # For normalisation (?)
+        # norm_v1 = torch.bmm(v1.unsqueeze(1), v1.unsqueeze(2))
+        # norm_v2 = torch.bmm(v2.unsqueeze(1), v2.unsqueeze(2))
+        # prod_normalised = prods/torch.sqrt(norm_v1*norm_v2)
+        prod_normalised = prods
+        # return torch.abs(prod_normalised).squeeze(dim=2)
+        out = prod_normalised
+        return out.squeeze(dim=2)

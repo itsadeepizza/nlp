@@ -9,6 +9,11 @@ THREESHOLD = 3e-5 # Never skip below this threeshold
 BASE_SKIP = 1.9 # Increase for skipping more words (default is 1.2, always greater than 1)
 OFFSET_SKIP = 0.025 # Decrease for skipping more words  (default is 0.00358)
 wc = train.word_frequency
+
+# Print some word example
+words_examples = [(w, f"{f:.2g}") for i, (w,f) in enumerate(wc.items()) if i % 200==0]
+print(words_examples)
+
 freqs = np.array(list(wc.values()))
 ratio = np.clip(OFFSET_SKIP / freqs * BASE_SKIP**(np.log(freqs)), 0, 1)
 ratio[freqs < THREESHOLD] = 1

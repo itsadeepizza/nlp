@@ -41,48 +41,48 @@ def normalize_text(file):
         r = re.findall("<text.*?>(.*?)</text>", batch, re.DOTALL)
         return "\n".join(r)
 
-    def sub(batch):
-        batch = batch.lower()
-        batch = re.sub('\[\[file*?(.*?)\n', "", batch) # remove file
-        batch = re.sub(r'<.*?>', "", batch, flags=re.DOTALL) # remove xml tags
-        batch = re.sub(r'\&lt.*?\&gt;', "", batch)
-        batch = re.sub(r'\&lt;!--.*?--\&gt;', "", batch, flags=re.DOTALL)
-        batch = re.sub('\[\[[^]]*?\|(.*?)\]\]', "\\1", batch) # remove link tags with text
-        batch = re.sub('\[\[([^]]*?)\]\]', "\\1", batch) # remove link tags
-        batch = re.sub('==.*?==', "", batch) # remove titles
-        batch = re.sub('/n *?\|.*?\n', "", batch)
-        batch = re.sub('\[.*?\]', "", batch) # remove website
-        batch = re.sub('\{\{.*?\}\}', "", batch) # remove bracket tags
+    def sub(chunk):
+        chunk = chunk.lower()
+        chunk = re.sub('\[\[file*?(.*?)\n', "", chunk) # remove file
+        chunk = re.sub(r'<.*?>', "", chunk, flags=re.DOTALL) # remove xml tags
+        chunk = re.sub(r'\&lt.*?\&gt;', "", chunk)
+        chunk = re.sub(r'\&lt;!--.*?--\&gt;', "", chunk, flags=re.DOTALL)
+        chunk = re.sub('\[\[[^]]*?\|(.*?)\]\]', "\\1", chunk) # remove link tags with text
+        chunk = re.sub('\[\[([^]]*?)\]\]', "\\1", chunk) # remove link tags
+        chunk = re.sub('==.*?==', "", chunk) # remove titles
+        chunk = re.sub('/n *?\|.*?\n', "", chunk)
+        chunk = re.sub('\[.*?\]', "", chunk) # remove website
+        chunk = re.sub('\{\{.*?\}\}', "", chunk) # remove bracket tags
         # batch = re.sub(r'\{.*?\}', "", batch, re.DOTALL) # remove other tags
         for name in ["collegamenti esterni", "voci correlate", "bibliografia", 'altri progetti']:
-            batch = re.sub(fr'== {name} ==.*?\n/n\n', "", batch, flags=re.DOTALL) # remove final
+            chunk = re.sub(fr'== {name} ==.*?\n/n\n', "", chunk, flags=re.DOTALL) # remove final
             # parts
 
-        batch = re.sub(r"'''", "", batch)
-        batch = re.sub(r"''", "", batch)
-        batch = re.sub(r"\{\{'\}\}", "'", batch)
+        chunk = re.sub(r"'''", "", chunk)
+        chunk = re.sub(r"''", "", chunk)
+        chunk = re.sub(r"\{\{'\}\}", "'", chunk)
         # batch = re.sub(r'’', " ", batch)
         # batch = re.sub(r'′', " ", batch)
-        batch = re.sub(r'&quot;', " ", batch)
+        chunk = re.sub(r'&quot;', " ", chunk)
         # batch = re.sub(r'"', " ", batch)
         # batch = re.sub(r"'", " ", batch)
         # batch = re.sub(r'“/', ' ', batch)
-        batch = re.sub(r'/n', ' ', batch)
-        batch = re.sub(r'\&amp;', ' ', batch)
-        batch = re.sub(r'nbsp;', ' ', batch)
-        batch = re.sub(r'=', ' ', batch)
-        batch = re.sub(r"\*", ' ', batch)
-        batch = re.sub(r"\|", ' ', batch)
-        batch = re.sub(r"categoria:", ' ', batch)
-        batch = re.sub(r"wikipedia:", ' ', batch)
+        chunk = re.sub(r'/n', ' ', chunk)
+        chunk = re.sub(r'\&amp;', ' ', chunk)
+        chunk = re.sub(r'nbsp;', ' ', chunk)
+        chunk = re.sub(r'=', ' ', chunk)
+        chunk = re.sub(r"\*", ' ', chunk)
+        chunk = re.sub(r"\|", ' ', chunk)
+        chunk = re.sub(r"categoria:", ' ', chunk)
+        chunk = re.sub(r"wikipedia:", ' ', chunk)
         # batch = re.sub(r"«", ' ', batch)
-        batch = re.sub(r"{", ' ', batch)
-        batch = re.sub(r"}", ' ', batch)
-        batch = re.sub(r'<br />', ' ', batch)
-        batch = re.sub(' +', ' ', batch) # remove multiple blanks
-        batch = re.sub('\n[\n ]+', '\n', batch) # remove multiple new lines
-        batch = re.sub('\n\d\d', '\n', batch) # remove lines of only digits
-        return batch
+        chunk = re.sub(r"{", ' ', chunk)
+        chunk = re.sub(r"}", ' ', chunk)
+        chunk = re.sub(r'<br />', ' ', chunk)
+        chunk = re.sub(' +', ' ', chunk) # remove multiple blanks
+        chunk = re.sub('\n[\n ]+', '\n', chunk) # remove multiple new lines
+        chunk = re.sub('\n\d\d', '\n', chunk) # remove lines of only digits
+        return chunk
 
     def process(batch):
         batch = extract_text(batch)
@@ -103,32 +103,13 @@ def normalize_text(file):
             out.write(process(batch))
 
 
-# sed -e "s/’/'/g" -e "s/′/'/g" -e "s/''/ /g" -e "s/'/ ' /g" -e "s/“/\"/g" -e "s/”/\"/g" \
-#     -e 's/"/ " /g' -e 's/\./ \. /g' -e 's/<br \/>/ /g' -e 's/, / , /g' -e 's/(/ ( /g' -e 's/)/ ) /g' -e 's/\!/ \! /g' \
-#     -e 's/\?/ \? /g' -e 's/\;/ /g' -e 's/\:/ /g' -e 's/-/ - /g' -e 's/=/ /g' -e 's/=/ /g' -e 's/*/ /g' -e 's/|/ /g' \
-#     -e 's/«/ /g' | tr 0-9 " "
-
-def make_vocab():
-    import pickle
-    from sklearn.feature_extraction.text import CountVectorizer
-
-    vectorizer = CountVectorizer(input='filename', max_features=15000)
-    X = vectorizer.fit([processed_txt])
-    with open("dataset/vectorizer.pickle", 'wb') as f:
-        pickle.dump(vectorizer, f)
-
-
-def run():
+def run(process_xml=True):
     get_wiki()
-    if not os.path.exists(processed_txt):
+    if not os.path.exists(processed_txt) and process_xml:
         print("Processing XML to text ...")
         normalize_text(filename_xml)
-        print("Done!")
-    if not os.path.exists("dataset/vectorizer.pickle"):
-        print("Listing words ...")
-        make_vocab(filename_xml)
         print("Done!")
 
 
 if __name__ == "__main__":
-    run()
+    run(process_xml=False)
