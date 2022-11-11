@@ -15,9 +15,9 @@ NEGATIVE_SAMPLE_PROB = 0.87   # Probability of a negative sample
 MAX_LEN = 15_000 # Number of words in vocabulary
 BATCH_SIZE = 200
 # Skipping words  double the execution time
-THREESHOLD = 1e-3
-BASE_SKIP = 1.2 # Increase for skipping fewer words (default is 1.2)
-OFFSET_SKIP = 8 # Increase for skipping fewer words  (default is 8)
+THRESHOLD = 3e-5 # Never skip below this threshold
+BASE_SKIP = 1.9 # Increase for skipping more words (default is 1.2, always greater than 1)
+OFFSET_SKIP = 0.025 # Decrease for skipping more words  (default is 0.00358)
 
 #======================================================
 
@@ -197,8 +197,8 @@ class NGramBatchIterator:
     def skip_too_frequent(self, word):
         """Skip words with too many occurrency"""
         freq = self.word_frequency[word]
-        if freq > THREESHOLD:
-            ratio = 1e-3 / freq * BASE_SKIP**(np.log(freq)+OFFSET_SKIP)
+        if freq > THRESHOLD:
+            ratio = np.clip(OFFSET_SKIP / freq * BASE_SKIP ** (np.log(freq)), 0, 1)
             r = np.random.random()
             if r > ratio:
                 return True
