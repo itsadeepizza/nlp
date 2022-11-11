@@ -17,6 +17,13 @@ def embed(word):
     with torch.no_grad():
         return model.embedding(tensorize(word)).cpu()
 
+def embed2(word):
+    with torch.no_grad():
+        t = tensorize(word)
+        embedded = model.embedding(t).cpu()
+        cont = model.context(t).cpu()
+        return torch.cat([embedded, cont])
+
 def find_best_by_dist(embedded_word):
     min_dist = None
     best = None
@@ -30,6 +37,16 @@ def find_best_by_dist(embedded_word):
             min_dist = delta_mod
             best = element
     return best
+
+
+
+def sort_by_dist(embedded_word, n=20):
+    """Return a sorted list of n nearest embedding words"""
+    words = vocab.keys()
+    dist = [torch.linalg.vector_norm(embed2(word)-embedded_word, ord=2) for word in words]
+    sorted_words = [(w,d) for w, d in sorted(zip(dist, words))]
+
+    return sorted_words[:n]
 
 # ?
 #def dotprod(word1, word2):
@@ -49,6 +66,7 @@ def show(words):
 show(["re", "regina", "donna", "uomo", "auto"])
 show(["pittore", "scrittore", "regista", "meccanico", "motore", "auto"])
 show(["passato", "presente", "futuro"])
-show(["ieri", "oggi", "domani", "pasta"])
+show(["attore", "scrittore", "uomo", "donna", "scrittrice", "attrice"])
 plt.show() # show all figures and wait
-print("re - uomo + donna =",find_best_by_dist(embed("donna")-embed("uomo")+embed("attore")))
+print("re - uomo + donna =", find_best_by_dist(embed("attore") - 2*embed("uomo") + 2*embed(
+    "donna")))

@@ -10,7 +10,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 # TODO: fix below
 vocab = {word: tensorize(word) for word, n in train.vocab.items()}
 use_tensorboard = True
-use_existing_model = False
+use_existing_model = True
 save_freq = 10000
 model_file = "model.pth"
 model = Model(device=device, len_voc=len(vocab))

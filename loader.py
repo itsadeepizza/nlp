@@ -4,7 +4,7 @@ import spacy
 from torch.utils.data import IterableDataset, DataLoader
 import torch
 import numpy as np
-
+from typing import Sequence
 
 # ╦ ╦╦ ╦╔═╗╔═╗╦═╗╔═╗╔═╗╦═╗╔═╗╔╦╗╔═╗╔╦╗╔═╗╦═╗╔═╗
 # ╠═╣╚╦╝╠═╝║╣ ╠╦╝╠═╝╠═╣╠╦╝╠═╣║║║║╣  ║ ║╣ ╠╦╝╚═╗
@@ -14,8 +14,8 @@ MAX_DIST = 2 # Max distance between word and context
 NEGATIVE_SAMPLE_PROB = 0.87   # Probability of a negative sample
 MAX_LEN = 15_000 # Number of words in vocabulary
 BATCH_SIZE = 200
-
 # Skipping words  double the execution time
+THREESHOLD = 1e-3
 BASE_SKIP = 1.2 # Increase for skipping fewer words (default is 1.2)
 OFFSET_SKIP = 8 # Increase for skipping fewer words  (default is 8)
 
@@ -105,7 +105,7 @@ class TextBatchIterator:
         return len(self.pos_list)
 
     @staticmethod
-    def split(filepath, seed=3, ratios=[0.75, 0.25], **kwargs):
+    def split(filepath, seed=3, ratios=[0.75, 0.25], **kwargs) -> Sequence["TextBatchIterator"]:
         """Split into train and test (or more possibilities)"""
         import numpy as np
 
@@ -197,7 +197,7 @@ class NGramBatchIterator:
     def skip_too_frequent(self, word):
         """Skip words with too many occurrency"""
         freq = self.word_frequency[word]
-        if freq > 1e-3:
+        if freq > THREESHOLD:
             ratio = 1e-3 / freq * BASE_SKIP**(np.log(freq)+OFFSET_SKIP)
             r = np.random.random()
             if r > ratio:
