@@ -26,6 +26,7 @@ class Model(nn.Module):
         if not len_voc: raise ValueError("len_voc needed")
         super().__init__()
         self.device = device
+
         self.context = Context(device, len_voc)
         self.embedding = Embedding(device, len_voc)
 
@@ -56,7 +57,7 @@ class ModelOneMatrix(nn.Module):
         self.embedding = Embedding(device, len_voc)
         # A random learnable vector as e0 parameter
         # self.register_parameter(name='prod', param=torch.nn.Parameter(torch.rand(len_voc, device=device)))
-        self.prod = torch.nn.Parameter(torch.rand(embedding_size))
+        self.prod = torch.nn.Parameter(torch.rand(embedding_size) * 2 - 1)
 
         self.sigmoid = nn.Sigmoid()
         self.to(self.device)

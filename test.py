@@ -6,7 +6,8 @@ from model import ModelOneMatrix as Model
 
 tensorize = train.tensorize
 vocab = train.vocab
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+# device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+device = torch.device("cpu")
 
 model_file = "model.pth"
 model = Model(device=device, len_voc=len(vocab))
@@ -41,13 +42,22 @@ def find_best_by_dist(embedded_word):
 
 
 
+
 def sort_by_dist(embedded_word, n=20):
     """Return a sorted list of n nearest embedding words"""
     words = vocab.keys()
-    dist = [torch.linalg.vector_norm(embed2(word)-embedded_word, ord=2) for word in words]
+    dist = [torch.linalg.vector_norm(embed(word)-embedded_word, ord=2) for word in words]
     sorted_words = [(w,d) for w, d in sorted(zip(dist, words))]
 
     return sorted_words[:n]
+
+# def sort_by_dist(embedded_word, n=20):
+#     """Return a sorted list of n nearest embedding words"""
+#     words = vocab.keys()
+#     dot_prods = [-torch.sum(embed(word) * model.prod * embedded_word) for word in words]
+#     sorted_words = [(w,d) for w, d in sorted(zip(dot_prods, words))]
+#
+#     return sorted_words[:n]
 
 # ?
 #def dotprod(word1, word2):
@@ -69,5 +79,7 @@ show(["pittore", "scrittore", "regista", "meccanico", "motore", "auto"])
 show(["passato", "presente", "futuro"])
 show(["attore", "scrittore", "uomo", "donna", "scrittrice", "attrice"])
 plt.show() # show all figures and wait
-print("re - uomo + donna =", find_best_by_dist(embed("re") - embed("uomo") + embed(
-    "donna")))
+print("re - scrittore + scrittrice =", sort_by_dist(embed("re") - embed("scrittore") + embed(
+    "scrittrice")))
+print("Cina - Italia + Roma =", sort_by_dist(embed("Cina") - embed("Italia") + embed(
+    "Roma")))

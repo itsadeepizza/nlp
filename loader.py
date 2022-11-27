@@ -10,7 +10,7 @@ from typing import Sequence
 # ╠═╣╚╦╝╠═╝║╣ ╠╦╝╠═╝╠═╣╠╦╝╠═╣║║║║╣  ║ ║╣ ╠╦╝╚═╗
 # ╩ ╩ ╩ ╩  ╚═╝╩╚═╩  ╩ ╩╩╚═╩ ╩╩ ╩╚═╝ ╩ ╚═╝╩╚═╚═╝
 
-MAX_DIST = 2 # Max distance between word and context
+MAX_DIST = 5 # Max distance between word and context
 NEGATIVE_SAMPLE_PROB = 0.87   # Probability of a negative sample
 MAX_LEN = 15_000 # Number of words in vocabulary
 BATCH_SIZE = 200
@@ -18,6 +18,7 @@ BATCH_SIZE = 200
 THRESHOLD = 3e-5 # Never skip below this threshold
 BASE_SKIP = 1.9 # Increase for skipping more words (default is 1.2, always greater than 1)
 OFFSET_SKIP = 0.025 # Decrease for skipping more words  (default is 0.00358)
+ONLY_PREVIOUS = True # Context need to precede embedding
 
 #======================================================
 
@@ -171,7 +172,6 @@ class TextBatchIterator:
         return dummy
 
 
-
 class NGramBatchIterator:
     """
     Class for iterating among Ngram in a short text
@@ -180,7 +180,7 @@ class NGramBatchIterator:
     sentences (detected using spacy). Negative samples are added.
     """
 
-    def __init__(self, text, text_batch_iterator, max_dist=MAX_DIST):
+    def __init__(self, text, text_batch_iterator, max_dist=MAX_DIST, only_previous=ONLY_PREVIOUS):
         self.text_batch_iterator = text_batch_iterator
         self.nlp = text_batch_iterator.nlp
         self.text = text
@@ -192,7 +192,10 @@ class NGramBatchIterator:
         self.vocab = text_batch_iterator.vocab
         self.word_frequency = text_batch_iterator.word_frequency
         self.len_vocab = len(self.vocab)
-        self.window = [x for x in range(-max_dist, max_dist + 1) if x != 0]
+        if only_previous:
+            self.window = [x for x in range(-max_dist, 0)]
+        else:
+            self.window = [x for x in range(-max_dist, max_dist + 1) if x != 0]
         self.device = text_batch_iterator.device
 
 
@@ -295,8 +298,6 @@ class NGramBatchIterator:
             # Performing so many stack decrease performance
             features = torch.stack([embedded_word, embedded_context])
             yield features, label
-
-
 
 
 class NGramTextIterator:
