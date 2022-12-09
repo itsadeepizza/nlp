@@ -1,5 +1,5 @@
 import os
-from config import *
+import config
 from loader import dataloader
 from model import Transformer
 

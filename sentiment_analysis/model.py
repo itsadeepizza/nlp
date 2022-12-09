@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from config import *
+import config
 
 class AttentionLayer(nn.Module):  # TODO: add multiple heads
 
@@ -109,10 +109,10 @@ class Embedding(nn.Module):
 
 
 class Transformer(nn.Module):
-    def __init__(self, embedding_dim=EMBEDDING_DIM, max_id_token=MAX_ID_TOKEN) -> None:
+    def __init__(self, embedding_dim=config.EMBEDDING_DIM, max_id_token=config.MAX_ID_TOKEN) -> None:
         super().__init__()
         self.embedding = Embedding(embedding_dim, max_id_token)
-        self.encoder_stack = nn.Sequential(*[EncoderBlock(embedding_dim)] * N_ENCODER_BLOCK)
+        self.encoder_stack = nn.Sequential(*[EncoderBlock(embedding_dim)] * config.N_ENCODER_BLOCK)
 
     def forward(self, x):
         x = self.embedding(x)

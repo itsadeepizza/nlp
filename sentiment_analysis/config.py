@@ -15,8 +15,8 @@ MAX_N_TOKEN = "200",
 BATCH_SIZE = "16",
 N_ENCODER_BLOCK = "5",
 BPE_MODEL = '"dbmdz/bert-base-italian-xxl-cased"',
-tokenizer = "AutoTokenizer.from_pretrained(BPE_MODEL)",
-MAX_ID_TOKEN = "len(tokenizer)",
+TOKENIZER = "AutoTokenizer.from_pretrained(BPE_MODEL)",
+MAX_ID_TOKEN = "len(TOKENIZER)",
 
 )
 
