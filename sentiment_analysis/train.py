@@ -1,6 +1,7 @@
+import os
+from config import *
 from loader import dataloader
 from model import Transformer
-from config import *
 
 class Trainer():
     def __init__(self):
