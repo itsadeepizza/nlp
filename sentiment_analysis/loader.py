@@ -2,10 +2,7 @@ import pandas as pd
 from typing import Sequence
 import torch
 from torch.utils.data import Dataset, DataLoader
-import config
-
-
-
+from builtins import config
 
 
 class TweetDataset(Dataset):

@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import config
+from builtins import config
+
 
 class AttentionLayer(nn.Module):  # TODO: add multiple heads
 

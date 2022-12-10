@@ -1,5 +1,5 @@
-import os
-import config
+from config import Config
+Config(BATCH_SIZE=30).make_global()
 from loader import dataloader
 from model import Transformer
 
