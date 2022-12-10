@@ -29,6 +29,6 @@ class Config():
                 print(f'Setting {name_var} = {kwargs[name_var]}')
                 config.__setattr__(name_var, kwargs[name_var])
 
-    def make_global(self):
+    def set_config(self):
         import builtins
         builtins.config = self
