@@ -1,10 +1,18 @@
 # https://github.com/tchambon/deepfrench/blob/master/tools/get-wikimedia.sh
 
+# Download compressed wikipedia dump
+# Extract- as xml file
+# (Optional) Convert xml to txt
+
 import os
+from pathlib import Path
+
+
+root = Path(__file__).resolve().parents[1]
 
 lang = "it"
-filename_bz2 = f"dataset/wiki_{lang}.bz2"
-filename_xml = f"dataset/wiki_{lang}.xml"
+filename_bz2 = str(root / "dataset" / f"wiki_{lang}.bz2")
+filename_xml = str(root / "dataset" / f"wiki_{lang}.xml")
 processed_txt = os.path.splitext(filename_xml)[0] + "_processed.txt"
 
 def get_wiki():
@@ -17,7 +25,6 @@ def get_wiki():
     wikipath = f"https://dumps.wikimedia.org/{lang}wiki/latest/{lang}wiki-latest-pages-articles.xml.bz2"
 
     if not os.path.exists("dataset"):
-
         os.makedirs("dataset")
     if not os.path.exists(filename_bz2):
         print("Downloading wikipedia dump ...")
