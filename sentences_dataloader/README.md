@@ -1,5 +1,7 @@
+# WIKIPEDIA DATALOADER
+*Build a dataset from wikipedia ITA for feeding a word2vec model*
 
-# Folder files
+## Folder files
 
 
 - `make_dataset.py` Download and pre-process wikipedia dump. It takes some time for executing
@@ -7,9 +9,9 @@
 - `/../dataset` folder containing pre-processed dataset and index files. Automatically generated
 - `ruby_postprocessing.py` Some postprocessing for files obtained using `wp2txt` 
 
-# Generating the dataset
+## Generating the dataset
 
-## Option A
+### Option A
 run `make_dataset.py` with the following parameter:
 
 ```run(process_xml=True)```
@@ -24,7 +26,7 @@ CONS:
  - Processed file contains some errors
 
 
-## Option B
+### Option B
 run `make_dataset.py` with the following parameter:
 
 ```run(process_xml=False)```
