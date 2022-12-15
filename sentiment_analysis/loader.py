@@ -2,19 +2,19 @@ import pandas as pd
 from typing import Sequence
 import torch
 from torch.utils.data import Dataset, DataLoader
-from builtins import config
+from config import selected_config as conf
 
 
 class TweetDataset(Dataset):
 
     def __init__(self, df):
         self.df = df
-        self.tokenizer = config.TOKENIZER  # Alternativa, hugging face solo tokenizer  # https://huggingface.co/docs/tokenizers/quicktour
+        self.tokenizer = conf.TOKENIZER  # Alternativa, hugging face solo tokenizer  # https://huggingface.co/docs/tokenizers/quicktour
 
     def tokenize(self, phrase: str) -> Sequence[str]:
         tokenized = self.tokenizer.encode(phrase)
         n_token = len(tokenized)
-        pad_tail = torch.ones(config.MAX_N_TOKEN - n_token) * self.tokenizer.pad_token_id
+        pad_tail = torch.ones(conf.MAX_N_TOKEN - n_token) * self.tokenizer.pad_token_id
         padded_tokenized = torch.cat([torch.tensor(tokenized), pad_tail], axis=0)
         return padded_tokenized.int(), n_token
 
@@ -54,9 +54,9 @@ class TweetDataLoader():
         return cropped_batch, label
 
 
-feelit_data = pd.read_csv(config.PATH_CSV, sep="\t")
+feelit_data = pd.read_csv(conf.PATH_CSV, sep="\t")
 dataset = TweetDataset(feelit_data)
-dataloader = TweetDataLoader(dataset, batch_size=config.BATCH_SIZE)
+dataloader = TweetDataLoader(dataset, batch_size=conf.BATCH_SIZE)
 
 if __name__ == "__main__":
     for x in dataloader:

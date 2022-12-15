@@ -1,5 +1,5 @@
-from config import Config
-Config(BATCH_SIZE=30).make_global()
+from config import selected_config as conf
+
 from loader import dataloader
 from model import Transformer
 
