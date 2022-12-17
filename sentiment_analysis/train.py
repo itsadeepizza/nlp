@@ -82,19 +82,19 @@ class Trainer(BaseTrainer):
             # predict
             self.train_sample(x, labels)
             # Perform different opeartions at regular intervals
-            if self.idx % conf.INTERVAL_TENSORBOARD == 0:
+            if self.idx % conf.INTERVAL_TENSORBOARD < conf.BATCH_SIZE:
                 # Write results on tensorboard
                 self.log_tensorboard()
-            if self.idx % conf.INTERVAL_SAVE_MODEL == 0:
+            if self.idx % conf.INTERVAL_SAVE_MODEL < conf.BATCH_SIZE:
                 # Save models as pth
                 self.save_models()
-            if self.idx % conf.INTERVAL_UPDATE_LR == 0:
+            if self.idx % conf.INTERVAL_UPDATE_LR < conf.BATCH_SIZE:
                 # UPDATE LR
                 self.update_lr()
                 for g in self.optimizer.param_groups:
                     g['lr'] = self.lr
 
-            if self.idx % conf.INTERVAL_TEST == 0:
+            if self.idx % conf.INTERVAL_TEST < conf.BATCH_SIZE:
                 # Test model
                 self.test()
 
