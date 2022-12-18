@@ -16,6 +16,8 @@ class Config():
 
     # word embedding dimension = 96
     EMBEDDING_DIM = 96
+    # Max number of sample to infer in test session (useful for larger dataset)
+    MAX_TEST_SAMPLE = 2000
     # Max length of a sentence in token
     SEED = 42
     MAX_N_TOKEN = 200

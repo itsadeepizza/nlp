@@ -89,7 +89,8 @@ if __name__ == '__main__':
     model.fit(X_train, y_train)
 
     # Report results
-    print(f"Expected only most frequent mean accuracy {only_frequent_expected_accuracy:.3f}")
+    # MFC = Most Frequent Class, a model who guess using only most frequent class
+    print(f"Expected MFC mean accuracy {only_frequent_expected_accuracy:.3f}")
     print(f"Expected random mean accuracy {random_expected_accuracy:.3f}")
     print(f"MEAN ACCURACY ON TEST : {model.score(X_test, y_test):0.3f}")
     print(f"Mean accuracy on train : {model.score(X_train, y_train):0.3f}")
@@ -110,6 +111,7 @@ if __name__ == '__main__':
     # print()
 
     # So for a mean accuracy located in the following ranges:
-    #     acc < 0.45        is just guessing
-    #     0.45 < acc < 0.7  is just looking to which words are used, but not at the order
+    #     acc < 0.45        it is just guessing
+    #     0.45 < acc < 0.7  it is just looking to which words are used, but not at the order
     #     acc > 0.7         It outperforms simpler models
+    #     acc > 0.82        It outperforms UmBERTo https://aclanthology.org/2021.wassa-1.8.pdf

@@ -2,13 +2,17 @@ import numpy as np
 
 from config import selected_config as conf
 conf.set_derivate_parameters()
-from loader import dataloader_train
 from model import Transformer
 from base_trainer import BaseTrainer
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import os
+import pandas as pd
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 class Trainer(BaseTrainer):
 
@@ -25,7 +29,6 @@ class Trainer(BaseTrainer):
 
 
     def init_models(self):
-        from model import Transformer
 
         # INITIALISING MODELS
         self.transformer = Transformer()
@@ -51,21 +54,33 @@ class Trainer(BaseTrainer):
         self.transformer.eval()
         list_test_loss = []
         correct_prediction = 0
-        for x, labels in self.test_dataloader:
+        label_list = []
+        prediction_list = []
+        for (x, labels) , i in zip(self.test_dataloader, range(conf.MAX_TEST_SAMPLE)):
             # Move to chosen device
             x = x.to(self.device)
             labels = labels.to(self.device)
             pred = self.make_prediction(x)
-            loss = self.loss_calculation(x, labels, pred, eval=True).item()
 
-            # Calculate accuracy
-            label_predicted = pred.argmax(axis=1)
-            correct_prediction += (label_predicted == labels).float().mean()
+            # Store results
+            label_list.append(labels.to('cpu'))
+            prediction_list.append(pred.to('cpu'))
 
-            list_test_loss.append(loss)
-        mean_test_loss = sum(list_test_loss) / len(list_test_loss)
+        # Calculate metrics
+        predictions = torch.cat(prediction_list)
+        labels = torch.cat(label_list)
+        mean_test_loss = self.criterion(predictions, labels)
+        predicted_labels = predictions.argmax(axis=1)
+        mean_accuracy = (predicted_labels == labels).float().mean()
+
+        cf_matrix = confusion_matrix(labels, predicted_labels)
+        classes = conf.MAP_LABEL.keys()
+        df_cf_matrix = pd.DataFrame(cf_matrix / np.sum(cf_matrix) * 10, index=[i for i in classes], columns=[i for i in classes])
+        # plt.figure(figsize=(12, 7)) # Set custom fig size
+        fig_cf_matrix = sns.heatmap(df_cf_matrix, annot=True).get_figure()
         self.writer.add_scalar("test_loss", mean_test_loss, self.idx)
-        self.writer.add_scalar("test_accuracy", correct_prediction / len(list_test_loss), self.idx)
+        self.writer.add_scalar("test_accuracy", mean_accuracy, self.idx)
+        self.writer.add_figure("Confusion matrix", fig_cf_matrix, self.idx)
 
 
 

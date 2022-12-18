@@ -74,9 +74,11 @@ train.reset_index(inplace=True, drop=True)
 test.reset_index(inplace=True, drop=True)
 dataset_train = TweetDataset(train)
 dataset_test = TweetDataset(test)
-dataloader_train = TweetDataLoader(dataset_train, batch_size=conf.BATCH_SIZE)
-dataloader_test = TweetDataLoader(dataset_test, batch_size=conf.BATCH_SIZE)
+dataloader_train = TweetDataLoader(dataset_train, batch_size=conf.BATCH_SIZE, shuffle=True)
+dataloader_test = TweetDataLoader(dataset_test, batch_size=conf.BATCH_SIZE, shuffle=True)
 
 if __name__ == "__main__":
-    for x in dataloader_train:
+    for x in zip(dataloader_train, range(2)):
         print(x)
+
+
