@@ -35,9 +35,11 @@ class TweetDataset(Dataset):
         # phrase = remove_hashtag(phrase)
         text_label = self.df.loc[i, "label"]
         # Convert text_label to dummy variable, ex: 'sadness' -> [0, 1, 0, 0]
+        # If it is not in the dictionary keys it returns unaltered
+        number_label = self.map_label.get(text_label, text_label)
 
         tokenized, n_token = self.tokenize(phrase)
-        return tokenized, torch.tensor(n_token), torch.tensor(self.map_label[text_label])
+        return tokenized, torch.tensor(n_token), torch.tensor(number_label)
 
     def __len__(self):
         return len(self.df)
@@ -59,8 +61,14 @@ class TweetDataLoader():
         cropped_batch = batch[:, 0:max_length]
         return cropped_batch, label
 
+# sentiment140 = df = pd.read_csv(conf.PATH_DATASET + "/sentiment140/sentiment140.csv", encoding_errors='ignore', names=["target", "ids", "date", "flag", "user", "text"])
+# sentiment140 = sentiment140.rename(columns={"target": "label", "text": "clean_tweet"})
 
-feelit_data = pd.read_csv(conf.PATH_CSV, sep="\t")
+# sentipolc =  pd.read_csv('dataset/sentipolc/training_set_sentipolc16.csv')
+# sentipolc = sentipolc.rename(columns={"text": "clean_tweet"})
+
+feelit_data = pd.read_csv(conf.PATH_DATASET + "/feelit/feelit.tsv", sep="\t")
+
 train, test = train_test_split(feelit_data, test_size=0.2)
 train.reset_index(inplace=True, drop=True)
 test.reset_index(inplace=True, drop=True)

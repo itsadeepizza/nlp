@@ -42,6 +42,7 @@ class Config():
 
     def set_derivate_parameters(config):
         """Set parameters which are derivate from other parameters"""
+        config.PATH_DATASET = str(config.root / 'dataset')
         config.PATH_CSV = str(config.root / 'dataset/feelit/feelit.tsv')
         config.ROOT_RUNS = str(config.root)
         config.TOKENIZER = AutoTokenizer.from_pretrained(config.BPE_MODEL)
