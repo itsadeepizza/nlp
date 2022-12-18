@@ -21,7 +21,7 @@ class BaseTrainer():
         torch.manual_seed(self.seed)
         random.seed(self.seed)
         numpy.random.seed(self.seed)
-
+        self.models = []
         # set device
         device = conf.get('DEVICE', torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         self.device = device
@@ -31,7 +31,12 @@ class BaseTrainer():
         # Set learning rate
         self.update_lr()
 
-        self.init_logger()
+    def count_parameters(self):
+        models_n_params = []
+        for model in self.models:
+            # Count parameters for each model
+            models_n_params.append(sum(p.numel() for p in model.parameters() if p.requires_grad))
+        return sum(models_n_params)
 
     def update_lr(self):
         # Generally you need to override this method in Trainer class
@@ -100,10 +105,12 @@ class BaseTrainer():
 
         # Log time
         self.writer.add_text("Time", datetime.datetime.now().strftime("%a %d %b %y - %H:%M"))
-        # Log a formatted configuration on tensorboard
-        config_as_table = "\n".join( [f"{param:>26} = {value}" for param, value in
-                                 conf.__dict__.items()])
+        # Log a formatted configuration on tensorboard (only uppercase public parameters
+        config_as_table = "\n".join( [f"{param:>26} = {conf.__getattribute__(param)}" for param in
+                                 dir(conf) if (not param.startswith("_") and param.upper() == param)])
         self.writer.add_text("Configuration", config_as_table)
+        n_parameters = self.count_parameters()
+        self.writer.add_text("Parameters: ", f"{n_parameters:,}")
 
     def log_tensorboard(self):
         # Log always loss on train, steps per second and current learning rate

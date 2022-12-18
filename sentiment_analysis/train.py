@@ -18,8 +18,9 @@ class Trainer(BaseTrainer):
 
         self.train_dataloader = train_dataloader
         self.test_dataloader = test_dataloader
-        self.init_models()
         self.criterion = nn.CrossEntropyLoss()
+        self.init_models()
+        self.init_logger()
 
 
 
@@ -29,7 +30,7 @@ class Trainer(BaseTrainer):
         # INITIALISING MODELS
         self.transformer = Transformer()
 
-        self.models = [self.transformer]
+        self.models.append(self.transformer)
         for model in self.models:
             model.to(self.device)
 
@@ -64,7 +65,7 @@ class Trainer(BaseTrainer):
             list_test_loss.append(loss)
         mean_test_loss = sum(list_test_loss) / len(list_test_loss)
         self.writer.add_scalar("test_loss", mean_test_loss, self.idx)
-        self.writer.add_scalar("accuracy", correct_prediction / len(list_test_loss), self.idx)
+        self.writer.add_scalar("test_accuracy", correct_prediction / len(list_test_loss), self.idx)
 
 
 

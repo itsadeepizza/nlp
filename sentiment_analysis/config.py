@@ -4,7 +4,7 @@ import os
 import torch
 
 class Config():
-
+    # PARAMETERS HAD TO BE UPPERCASE !
 
     root = Path(__file__).resolve().parents[1]
 
@@ -19,7 +19,7 @@ class Config():
     # Max length of a sentence in token
     SEED = 42
     MAX_N_TOKEN = 200
-    BATCH_SIZE = 64
+    BATCH_SIZE = 128
     N_ENCODER_BLOCK = 5
     EPOCHS = 100
     N_HEADS = 6
