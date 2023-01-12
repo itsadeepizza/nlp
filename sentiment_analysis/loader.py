@@ -27,6 +27,7 @@ class TweetDataset(Dataset):
         padded_tokenized = torch.cat([torch.tensor(tokenized), pad_tail], axis=0)
         return padded_tokenized.int(), n_token
 
+
     def __getitem__(self, i):
         # if i >= len(self):
         #   raise StopIteration
