@@ -121,7 +121,7 @@ class Trainer(BaseTrainer):
             for idx in range(samples_num):
                 prompt = x
                 output = ''
-                for _ in tqdm(range(tokens_max_num)):
+                for _ in range(tokens_max_num):
                     logits = self.make_prediction(conf.TOKENIZER.encode(prompt, return_tensors='pt').to(conf.DEVICE))[0][0, -1, :].to(torch.float32) / temperature
                     logits = F.softmax(logits, dim=0)
                     top_k_logits_idxs = torch.fliplr(torch.unsqueeze(torch.argsort(logits), dim=0))[0][:top_k_tokens]
@@ -130,8 +130,9 @@ class Trainer(BaseTrainer):
                     token_decoded = conf.TOKENIZER.decode(token_idx_predicted)
                     prompt += token_decoded
                     output += token_decoded
-                    samples.append(output)
-                    print(output)
+                    print(token_decoded, end=' ')
+                samples.append(output)
+                print()
 
         return samples
 

@@ -17,8 +17,8 @@ from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(conf.BPE_MODEL)
 
 if __name__ == '__main__':
-    conf.LOAD_PATH = r'runs/fit/23-01-12-23H55_brown_number/models'
-    conf.LOAD_IDX = 400
+    conf.LOAD_PATH = r'runs/fit/23-01-13-00H17_wide_work/models'
+    conf.LOAD_IDX = 19400
     conf.DEVICE = torch.device("cpu")
     conf.set_derivate_parameters()
 

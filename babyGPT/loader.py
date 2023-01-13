@@ -49,7 +49,7 @@ class TextChunkIterator:
         :param chunks_positions: list containing all positions of each chunk in the form
                         [[start_chunk_1, end_chunk_2], [start_chunk_2, end_chunk_2], ...]
         """
-        self.nlp = spacy.load("it_core_news_sm")
+        #self.nlp = spacy.load("it_core_news_sm")
         self.filepath = filepath
         self.chunks_positions = chunks_positions
         self._word_list = None
@@ -204,13 +204,14 @@ class SentenceChunkIterator:
 
     def __init__(self, text, text_chunk_iterator, device=device):
         self.text_chunk_iterator = text_chunk_iterator
-        self.nlp = text_chunk_iterator.nlp
+        #self.nlp = text_chunk_iterator.nlp
         self.text = text
         # TODO: add below to preprocessing
         # Below can be done in preprocessing maybe, it takes 8 ms for batch
         # Text is splitted in sentences
-        self.sentences = [[str(token) for token in sentence] for sentence in self.nlp(text).sents]
-        # self.sentences = [text.split()]
+
+        # self.sentences = [[str(token) for token in sentence] for sentence in self.nlp(text).sents]
+        self.sentences = text.split('.')
         self.device = device
         self.tokenizer = conf.TOKENIZER
 
@@ -235,7 +236,7 @@ class SentenceChunkIterator:
 
         # Iterate sentence among sentences
         while self.curr_sentence < len(self.sentences):
-            sentence = str(self.sentences[self.curr_sentence])
+            sentence = self.sentences[self.curr_sentence]
             self.curr_sentence += 1
             tokenized, n_token = tokenize(sentence)
             # Skip sentences too long
