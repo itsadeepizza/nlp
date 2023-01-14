@@ -3,7 +3,7 @@ from config import selected_config as conf
 
 from train import Trainer
 import torch
-from loader import train_dataloader, test_dataloader
+# from loader import train_dataloader, test_dataloader
 from model           import Transformer
 from base_trainer    import BaseTrainer
 
@@ -17,13 +17,13 @@ from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(conf.BPE_MODEL)
 
 if __name__ == '__main__':
-    conf.LOAD_PATH = r'runs/fit/23-01-13-00H17_wide_work/models'
-    conf.LOAD_IDX = 19400
+    conf.LOAD_PATH = r'runs/fit/23-01-13-10H56_sparkling_week/models'
+    conf.LOAD_IDX = 17200
     conf.DEVICE = torch.device("cpu")
     conf.set_derivate_parameters()
 
-    trainer = Trainer(train_dataloader, test_dataloader)
+    trainer = Trainer(None, None)
 
     sentence = 'Il gatto è'
-    candidates = trainer.test_sample(sentence)
+    candidates = trainer.test_sample(sentence, temperature=1)
     print(candidates)

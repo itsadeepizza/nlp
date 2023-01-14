@@ -1,7 +1,6 @@
 
 import os.path
 import pickle
-import spacy
 from torch.utils.data import IterableDataset, DataLoader
 import torch
 import numpy as np

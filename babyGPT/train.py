@@ -113,27 +113,37 @@ class Trainer(BaseTrainer):
     def update_lr(self):
         self.lr = conf.LR_INIT * (conf.LR_DECAY ** (self.idx / conf.LR_STEP))
 
-    def test_sample(self, x, samples_num=4, tokens_max_num=32, temperature=4, top_k_tokens=8):
+    def test_sample(self, prompt, samples_num=4, tokens_max_num=32, temperature=1, top_k_tokens=8):
         """Manually test the model on a sample of text"""
         samples = []
-        print(x)
+        print(prompt)
+        # no gradient
         with torch.no_grad():
+            # no dropout
+            self.transformer.eval()
+            # return multiple examples of predicted sentence
             for idx in range(samples_num):
-                prompt = x
                 output = ''
+                # tokenize the prompt
+                tokenized = conf.TOKENIZER.encode(prompt, return_tensors='pt').to(conf.DEVICE)
                 for _ in range(tokens_max_num):
-                    logits = self.make_prediction(conf.TOKENIZER.encode(prompt, return_tensors='pt').to(conf.DEVICE))[0][0, -1, :].to(torch.float32) / temperature
+                    # make prediction
+                    logits = self.make_prediction(tokenized)[0][0, -1, :].to(torch.float32) / temperature
+                    # Extract top logits
                     logits = F.softmax(logits, dim=0)
                     top_k_logits_idxs = torch.fliplr(torch.unsqueeze(torch.argsort(logits), dim=0))[0][:top_k_tokens]
-                    top_k_logits = torch.tensor([logits[logit_idx] for logit_idx in top_k_logits_idxs])
+                    # top_k_logits = torch.tensor([logits[logit_idx] for logit_idx in top_k_logits_idxs])
+                    top_k_logits = logits[top_k_logits_idxs]
+                    # sample one logit, with probability given by logits (multinomial distribution)
                     token_idx_predicted = top_k_logits_idxs[top_k_logits.multinomial(num_samples=1)[0].item()]
+                    # add predicted logit to the tokenized sentence
+                    tokenized += token_idx_predicted
+                    # convert to plain text, print, and store for return at the end of the generation
                     token_decoded = conf.TOKENIZER.decode(token_idx_predicted)
-                    prompt += token_decoded
-                    output += token_decoded
+                    output += " " + token_decoded
                     print(token_decoded, end=' ')
                 samples.append(output)
                 print()
-
         return samples
 
 

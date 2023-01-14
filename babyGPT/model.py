@@ -21,8 +21,8 @@ class AttentionLayer(nn.Module):
         V = self.linear_V(V)
 
         x = torch.matmul(Q, torch.transpose(K, -1, -2))
+        # index i of Q can see index j of K iff j <= i (masking)
         x = torch.tril(x)
-
 
         x = x / math.sqrt(self.embedding_dim)
         x = F.softmax(x, dim=-1)
@@ -154,17 +154,15 @@ class Transformer(nn.Module):
         self.loss = nn.CrossEntropyLoss()
 
     def forward(self, x, loss=False):
-        y = x
+        y = torch.flatten(x[:, :-1].to(int)) # just a test, predict sentence without shift
+        # y = torch.flatten(x[:, 1:].to(int))
         x = self.embedding(x)
         x = self.encoder_stack(x)
-
         x = self.classification_head(x)  # NO SOFTMAX!!
 
         if loss:
-            loss = self.loss(torch.flatten(x[:, :-1], 0, 1), torch.flatten(y[:, 1:].to(int)))
-            
+            loss = self.loss(torch.flatten(x[:, :-1], 0, 1), y)
             return x, loss
-
         return x, None
     
 def main():

@@ -151,7 +151,6 @@ class Transformer(nn.Module):
     def forward(self, x):
         x = self.embedding(x)
         x = self.encoder_stack(x)
-
         x = self.classification_head(x)  # NO SOFTMAX!!
 
         return x
