@@ -7,7 +7,7 @@ class Config():
 
     root = Path(__file__).resolve().parents[1]
 
-    INTERVAL_TENSORBOARD = 25
+    INTERVAL_TENSORBOARD = 100
     INTERVAL_SAVE_MODEL  = 1000
     RATIO_KEEP_MODEL = 10 # delete old models when saving a new one, but keep a ratio of models
     INTERVAL_UPDATE_LR   = 100
@@ -31,12 +31,8 @@ class Config():
 
     BPE_MODEL  = "dbmdz/bert-base-italian-xxl-cased"
     DEVICE     = torch.device('cpu')
-    MAP_LABEL  = {
-                  'joy'     : 0,
-                  'sadness' : 1,
-                  'anger'   : 2,
-                  'fear'    : 3
-                 }
+
+    # Learning rate
     LR_INIT  = 1E-4
     LR_DECAY = 1E-1
     LR_STEP  = 5e5

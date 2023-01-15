@@ -23,7 +23,10 @@ class AttentionLayer(nn.Module):
         x = torch.matmul(Q, torch.transpose(K, -1, -2))
         # index i of Q can see index j of K iff j <= i (masking)
         x = torch.tril(x)
-
+        # Attention! We need to mask previous token, but setting attention equal to 0 is not enough, since softmaw will convert 0 values to positive ones.
+        # A quick solution (probably not the best one) is setting 0 values equals to - inf)
+        # TODO: this is probably not the cleanest way to do it ...
+        x[x == 0] = - torch.inf
         x = x / math.sqrt(self.embedding_dim)
         x = F.softmax(x, dim=-1)
 
@@ -154,10 +157,10 @@ class Transformer(nn.Module):
 
         self.loss = nn.CrossEntropyLoss()
 
-    def forward(self, x, calculate_loss=False):
+    def forward(self, tokenized, calculate_loss=False):
         # y = torch.flatten(x[:, :-1].to(int)) # just a test, predict sentence without shift
-        y = torch.flatten(x[:, 1:].to(int))
-        x = self.embedding(x)
+        y = torch.flatten(tokenized[:, 1:].to(int))
+        x = self.embedding(tokenized)
         x = self.encoder_stack(x)
         x = self.classification_head(x)  # NO SOFTMAX!!
 
