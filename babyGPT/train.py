@@ -110,7 +110,7 @@ class Trainer(BaseTrainer):
         pred, loss = self.make_prediction(x, calculate_loss=True)
         loss.backward()
         self.optimizer.step()
-        self.mean_train_loss += loss.item()
+        self.mean_train_loss += loss.item() * conf.BATCH_SIZE
         print(f"Step {self.idx} - Loss = {loss:.5f}")
 
     def update_lr(self):
@@ -129,18 +129,22 @@ class Trainer(BaseTrainer):
                 output = ''
                 # tokenize the prompt
                 tokenized = conf.TOKENIZER.encode(prompt, return_tensors='pt').to(conf.DEVICE)
+                tokenized = tokenized[:,:-1]
                 for _ in range(tokens_max_num):
                     # make prediction
-                    logits = self.make_prediction(tokenized)[0][0, -1, :].to(torch.float32) / temperature
+                    logits, loss = self.make_prediction(tokenized)
+                    next_word_logits = logits[0, -1, :].to(torch.float32) / temperature
+                    # no padding never
+                    # next_word_logits[0] = 0
                     # Extract top logits
-                    logits = F.softmax(logits, dim=0)
-                    top_k_logits_idxs = torch.fliplr(torch.unsqueeze(torch.argsort(logits), dim=0))[0][:top_k_tokens]
+                    next_word_logits = F.softmax(next_word_logits, dim=0)
+                    top_k_logits_idxs = torch.fliplr(torch.unsqueeze(torch.argsort(next_word_logits), dim=0))[0][:top_k_tokens]
                     # top_k_logits = torch.tensor([logits[logit_idx] for logit_idx in top_k_logits_idxs])
-                    top_k_logits = logits[top_k_logits_idxs]
+                    top_k_logits = next_word_logits[top_k_logits_idxs]
                     # sample one logit, with probability given by logits (multinomial distribution)
                     token_idx_predicted = top_k_logits_idxs[top_k_logits.multinomial(num_samples=1)[0].item()]
                     # add predicted logit to the tokenized sentence
-                    tokenized += token_idx_predicted
+                    tokenized = torch.cat([tokenized, token_idx_predicted.unsqueeze(0).unsqueeze(1)], axis=1)
                     # convert to plain text, print, and store for return at the end of the generation
                     token_decoded = conf.TOKENIZER.decode(token_idx_predicted)
                     output += " " + token_decoded

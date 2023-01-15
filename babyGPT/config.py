@@ -8,7 +8,7 @@ class Config():
     root = Path(__file__).resolve().parents[1]
 
     INTERVAL_TENSORBOARD = 25
-    INTERVAL_SAVE_MODEL  = 200
+    INTERVAL_SAVE_MODEL  = 1000
     RATIO_KEEP_MODEL = 10 # delete old models when saving a new one, but keep a ratio of models
     INTERVAL_UPDATE_LR   = 100
     INTERVAL_TEST        = 5_000_000
@@ -44,6 +44,7 @@ class Config():
     # Model parameters
     POINTWISE_DIM = 1024
     N_ENCODER_BLOCK = 4
+
 
     def __init__(self):
 

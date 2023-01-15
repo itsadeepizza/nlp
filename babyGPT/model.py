@@ -155,8 +155,8 @@ class Transformer(nn.Module):
         self.loss = nn.CrossEntropyLoss()
 
     def forward(self, x, calculate_loss=False):
-        y = torch.flatten(x[:, :-1].to(int)) # just a test, predict sentence without shift
-        # y = torch.flatten(x[:, 1:].to(int))
+        # y = torch.flatten(x[:, :-1].to(int)) # just a test, predict sentence without shift
+        y = torch.flatten(x[:, 1:].to(int))
         x = self.embedding(x)
         x = self.encoder_stack(x)
         x = self.classification_head(x)  # NO SOFTMAX!!
