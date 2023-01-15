@@ -1,6 +1,6 @@
 import torch
 from config import selected_config as conf
-conf.BATCH_SIZE = 2
+conf.BATCH_SIZE = 1
 conf.LOAD_PATH  = None
 conf.LOAD_IDX   = 0
 conf.DEVICE     = torch.device("cuda")

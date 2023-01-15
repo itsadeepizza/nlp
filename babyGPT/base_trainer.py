@@ -10,7 +10,7 @@ import numpy as np
 from config import selected_config as conf
 import inspect
 import glob
-
+import re
 
 class BaseTrainer():
 
@@ -124,14 +124,17 @@ class BaseTrainer():
             torch.save(model.state_dict(), f"{path}/{name}_{self.idx}.pth")
 
     def remove_old_models(self):
-        """Remove the previous last model in each model directory"""
+        """Remove the second_last model in each model directory"""
         for model in self.models:
             name = model.__class__.__name__
             path = os.path.join(self.models_dir, name)
             model_list = glob.glob(path + '/*.pth')
+            idx_list = [int(re.search('_([0-9]+).pth', os.path.basename(file)).groups()[0]) for file in model_list]
             if len(model_list) > 1:
-                prev_last = sorted(model_list)[-2]
-                os.remove(prev_last)
+                # ignore max index
+                idx_list[np.argmax(idx_list)] = 0
+                second_last = model_list[np.argmax(idx_list)]
+                os.remove(second_last)
 
     @staticmethod
     def plot_to_tensorboard(fig):

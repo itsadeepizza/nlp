@@ -8,23 +8,23 @@ class Config():
     root = Path(__file__).resolve().parents[1]
 
     INTERVAL_TENSORBOARD = 25
-    INTERVAL_SAVE_MODEL  = 10
-    RATIO_KEEP_MODEL = 2 # delete old models when saving a new one, but keep a ratio of models
+    INTERVAL_SAVE_MODEL  = 200
+    RATIO_KEEP_MODEL = 10 # delete old models when saving a new one, but keep a ratio of models
     INTERVAL_UPDATE_LR   = 100
     INTERVAL_TEST        = 5_000_000
 
 
     # word embedding dimension = 512
-    EMBEDDING_DIM = 512
+    EMBEDDING_DIM = 256
     # Max number of sample to infer in test session (useful for larger dataset)
     MAX_TEST_SAMPLE = 2000
     # Max length of a sentence in token
     SEED            = 42
-    MAX_N_TOKEN     = 256
+    MAX_N_TOKEN     = 128
     BATCH_SIZE      = 2
 
     EPOCHS          = 100
-    N_HEADS         = 6
+    N_HEADS         = 3
     DROPOUT_RATE    = 0.2
 
     # Number of class in labels
@@ -42,8 +42,8 @@ class Config():
     LR_STEP  = 5e5
 
     # Model parameters
-    POINTWISE_DIM = 4096
-    N_ENCODER_BLOCK = 6
+    POINTWISE_DIM = 1024
+    N_ENCODER_BLOCK = 4
 
     def __init__(self):
 

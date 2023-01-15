@@ -147,7 +147,8 @@ class Transformer(nn.Module):
         super().__init__()
 
         self.embedding = Embedding(embedding_dim, max_id_token)
-        self.encoder_stack = nn.Sequential(*[EncoderBlock(embedding_dim, n_heads) for i in range(conf.N_ENCODER_BLOCK)])  # conf.N_ENCODER_BLOCK
+        self.encoder_stack = nn.Sequential(*[EncoderBlock(embedding_dim, n_heads) for i in range(conf.N_ENCODER_BLOCK)])
+        # conf.N_ENCODER_BLOCK
 
         self.classification_head = ClassificationHead(embedding_dim, output_dim)
 
