@@ -84,6 +84,9 @@ class Trainer(BaseTrainer):
             if self.idx % conf.INTERVAL_SAVE_MODEL < conf.BATCH_SIZE:
                 # Save models as pth
                 self.save_models()
+                # remove old saved models (but keep one model each RATIO_KEEP_MODEL)
+                if  (self.idx // conf.INTERVAL_SAVE_MODEL) % conf.RATIO_KEEP_MODEL != 0:
+                    self.remove_old_models()
 
             if self.idx % conf.INTERVAL_UPDATE_LR < conf.BATCH_SIZE:
                 # UPDATE LR
@@ -104,7 +107,7 @@ class Trainer(BaseTrainer):
 
     def train_sample(self, x):
         self.idx += conf.BATCH_SIZE
-        pred, loss = self.make_prediction(x, loss=True)
+        pred, loss = self.make_prediction(x, calculate_loss=True)
         loss.backward()
         self.optimizer.step()
         self.mean_train_loss += loss.item()
@@ -148,15 +151,4 @@ class Trainer(BaseTrainer):
 
 
 
-
-
-
-    def save_models(self):
-
-        for model in self.models:
-            self.save_model(model, model.__class__.__name__)
-
-
-
-
-#type "tensorboard --logdir=runs" in terminal
+#type "tensorboard --logdir=runs/summary" in terminal

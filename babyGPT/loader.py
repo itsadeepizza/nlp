@@ -13,6 +13,7 @@ from config import selected_config as conf
 # ╠═╣╚╦╝╠═╝║╣ ╠╦╝╠═╝╠═╣╠╦╝╠═╣║║║║╣  ║ ║╣ ╠╦╝╚═╗
 # ╩ ╩ ╩ ╩  ╚═╝╩╚═╩  ╩ ╩╩╚═╩ ╩╩ ╩╚═╝ ╩ ╚═╝╩╚═╚═╝
 
+
 MAX_DIST = 5 # Max distance between word and context
 NEGATIVE_SAMPLE_PROB = 0.87   # Probability of a negative sample
 MAX_LEN = 15_000 # Number of words in vocabulary

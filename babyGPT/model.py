@@ -48,7 +48,7 @@ class MultiHeadAttentionLayer(nn.Module):
 
 
 class PointwiseLayer(nn.Module):
-    def __init__(self, input_dim, output_dim, dropout_rate=0.2):
+    def __init__(self, input_dim, output_dim, dropout_rate=conf.DROPOUT_RATE):
         super().__init__()
 
         self.linear_0 = nn.Linear(input_dim, output_dim)
@@ -153,14 +153,14 @@ class Transformer(nn.Module):
 
         self.loss = nn.CrossEntropyLoss()
 
-    def forward(self, x, loss=False):
+    def forward(self, x, calculate_loss=False):
         y = torch.flatten(x[:, :-1].to(int)) # just a test, predict sentence without shift
         # y = torch.flatten(x[:, 1:].to(int))
         x = self.embedding(x)
         x = self.encoder_stack(x)
         x = self.classification_head(x)  # NO SOFTMAX!!
 
-        if loss:
+        if calculate_loss:
             loss = self.loss(torch.flatten(x[:, :-1], 0, 1), y)
             return x, loss
         return x, None

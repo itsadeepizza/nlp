@@ -9,6 +9,7 @@ import numpy.random
 import numpy as np
 from config import selected_config as conf
 import inspect
+import glob
 
 
 class BaseTrainer():
@@ -74,13 +75,13 @@ class BaseTrainer():
         # Create directories for logs
 
         name = generate_docker_style_name()
-        self.log_dir = conf.ROOT_RUNS + "/runs/fit/" + name
-        self.summary_dir = self.log_dir + "/summary"
-        self.models_dir = self.log_dir + "/models"
-        self.test_dir = self.log_dir + "/test"
-        self.img_dir = self.log_dir + "/img"
 
-        os.makedirs(self.log_dir, exist_ok=True)
+        self.summary_dir = conf.ROOT_RUNS + "/runs/summary/" + name
+        self.models_dir = conf.ROOT_RUNS + "/runs/models/" + name
+        self.test_dir = conf.ROOT_RUNS + "/runs/test/" + name
+        self.img_dir = conf.ROOT_RUNS + "/runs/img/" + name
+
+        os.makedirs(self.summary_dir, exist_ok=True)
         os.makedirs(self.models_dir, exist_ok=True)
         os.makedirs(self.img_dir, exist_ok=True)
         os.makedirs(self.test_dir, exist_ok=True)
@@ -114,11 +115,23 @@ class BaseTrainer():
         self.writer.add_scalar("lr", self.lr, self.idx)
         self.mean_train_loss = 0
 
-    def save_model(self, model, name: str):
-        path = os.path.join(self.models_dir, name)
-        if not os.path.exists(path):
-            os.mkdir(path)
-        torch.save(model.state_dict(), f"{path}/{name}_{self.idx}.pth")
+    def save_models(self):
+        for model in self.models:
+            name = model.__class__.__name__
+            path = os.path.join(self.models_dir, name)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            torch.save(model.state_dict(), f"{path}/{name}_{self.idx}.pth")
+
+    def remove_old_models(self):
+        """Remove the previous last model in each model directory"""
+        for model in self.models:
+            name = model.__class__.__name__
+            path = os.path.join(self.models_dir, name)
+            model_list = glob.glob(path + '/*.pth')
+            if len(model_list) > 1:
+                prev_last = sorted(model_list)[-2]
+                os.remove(prev_last)
 
     @staticmethod
     def plot_to_tensorboard(fig):

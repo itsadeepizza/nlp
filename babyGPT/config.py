@@ -8,7 +8,8 @@ class Config():
     root = Path(__file__).resolve().parents[1]
 
     INTERVAL_TENSORBOARD = 25
-    INTERVAL_SAVE_MODEL  = 200
+    INTERVAL_SAVE_MODEL  = 10
+    RATIO_KEEP_MODEL = 2 # delete old models when saving a new one, but keep a ratio of models
     INTERVAL_UPDATE_LR   = 100
     INTERVAL_TEST        = 5_000_000
 
@@ -24,9 +25,10 @@ class Config():
 
     EPOCHS          = 100
     N_HEADS         = 6
+    DROPOUT_RATE    = 0.2
 
     # Number of class in labels
-    OUTPUT_DIM = 4
+
     BPE_MODEL  = "dbmdz/bert-base-italian-xxl-cased"
     DEVICE     = torch.device('cpu')
     MAP_LABEL  = {
