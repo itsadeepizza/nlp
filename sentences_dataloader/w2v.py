@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from sentences_dataloader.loader import train, train_dataloader, train_dataset
+from loader import train, train_dataloader, train_dataset
 from model import ModelOneMatrix as Model
 
 tensorize = train.tensorize

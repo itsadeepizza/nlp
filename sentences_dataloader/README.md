@@ -1,13 +1,18 @@
-# WIKIPEDIA DATALOADER
+# WIKIPEDIA DATALOADER AND WORD EMPEDDING
+
 *Build a dataset from wikipedia ITA for feeding a word2vec model*
 
 ## Folder files
 
-
-- `make_dataset.py` Download and pre-process wikipedia dump. It takes some time for executing
-- `loader.py` Code for loading couples word/embedding from wikipedia dump
-- `/../dataset` folder containing pre-processed dataset and index files. Automatically generated
-- `ruby_postprocessing.py` Some postprocessing for files obtained using `wp2txt` 
+- `make_dataset.py` Download and pre-process wikipedia dump. It takes some time for executing;
+- `loader.py` Code for loading couples word/embedding from wikipedia dump;
+- `/../dataset` folder containing pre-processed dataset and index files. Automatically generated;
+- `ruby_postprocessing.py` Some postprocessing for files obtained using `wp2txt`;
+- `model.py` Code for different versions of word2vec;
+- `test.py` Plot and compare word embedding obtained with our model;
+- `w2v.ppy` Train a word embedding model;
+- `word_frequency.py` Some calculations to estimating frequency distribution of words
+and testing different parameters for skipping more frequent words.
 
 ## Generating the dataset
 
@@ -59,3 +64,10 @@ CONS:
  - You need ruby
  - More steps 
 
+## Train the model
+
+Run `w2v.py`. Attention, old model saved will be overwritten at each execution, so make a manual backup if you want to keep a save.
+
+## Test a model
+
+Ru `test.py`, feel free to add your own examples.

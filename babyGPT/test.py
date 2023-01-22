@@ -16,15 +16,15 @@ from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(conf.BPE_MODEL)
 
 if __name__ == '__main__':
-    conf.LOAD_PATH = r'runs/models/23-01-15-12H23_clean_week'
-    # conf.LOAD_PATH = r'runs/models/23-01-15-09H19_old_work'
-    conf.LOAD_IDX = 439000
-    # conf.LOAD_IDX = 114000
+    conf.LOAD_PATH = r'runs/models/23-01-15-18H40_orange_man'
+    conf.LOAD_IDX = 849000
     conf.DEVICE = torch.device("cpu")
 
 
     trainer = Trainer(None, None)
 
-    sentence = 'Negli anni cinquanta il convento venne demolito e fu costruita una nuova'
-    candidates = trainer.test_sample(sentence, temperature=1.5)
+    sentence = 'negli anni cinquanta il convento venne demolito e fu costruita una nuova'
+    # sentence = '''Della sua produzione giovanile sono conducibili'''
+    sentence = 'Il mio gatto è'
+    candidates = trainer.test_sample(sentence, temperature=1)
     print(candidates)
