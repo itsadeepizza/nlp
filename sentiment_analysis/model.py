@@ -34,7 +34,7 @@ class MultiHeadAttentionLayer(nn.Module):
     def __init__(self, embedding_dim, n_heads):
         super().__init__()
 
-        self.heads = nn.ModuleList([AttentionLayer(embedding_dim)] * n_heads)
+        self.heads = nn.ModuleList([AttentionLayer(embedding_dim) for i in range(n_heads)])
         self.linear = nn.Linear(embedding_dim * n_heads, embedding_dim, bias=False)
 
     def forward(self, x):
@@ -144,7 +144,7 @@ class Transformer(nn.Module):
         super().__init__()
 
         self.embedding = Embedding(embedding_dim, max_id_token)
-        self.encoder_stack = nn.Sequential(*[EncoderBlock(embedding_dim, n_heads)] * conf.N_ENCODER_BLOCK)  # conf.N_ENCODER_BLOCK
+        self.encoder_stack = nn.Sequential(*[EncoderBlock(embedding_dim, n_heads) for i in range(conf.N_ENCODER_BLOCK)]) # conf.N_ENCODER_BLOCK
 
         self.classification_head = ClassificationHead(embedding_dim, output_dim)
 
